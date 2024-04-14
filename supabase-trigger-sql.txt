@@ -1,0 +1,25 @@
+// function through sql editor
+create function public.create_profile_after_signup()
+returns trigger
+language plpgsql
+security definer set search_path = public
+as $$
+begin
+  insert into public.profiles (id, email, "firstName", "lastName")
+  values(
+    new.id,
+    new.email,
+    new.raw_user_meta_data ->> 'firstName',
+    new.raw_user_meta_data ->> 'lastName'
+  );
+  return new;
+end;
+$$;
+
+// trigger
+create trigger create_profile
+after insert on auth.users for each row
+execute function create_profile_after_signup();
+
+// docs
+https://supabase.com/docs/guides/auth/managing-user-data
